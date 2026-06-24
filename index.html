@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ExpiryTrack</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+
+<!-- ══════════════ GİRİŞ ══════════════ -->
+<div id="loginPage" class="login-page">
+  <div class="login-bg">
+    <div class="login-blob blob1"></div>
+    <div class="login-blob blob2"></div>
+    <div class="login-blob blob3"></div>
+  </div>
+  <div class="login-card">
+    <div class="login-brand">
+      <div id="loginLogoWrap"><div class="brand-icon"><i class="fas fa-box-open"></i></div></div>
+      <h1 id="loginAppName">ExpiryTrack</h1>
+      <p id="loginTagline">Akıllı Son Kullanma Takip Sistemi</p>
+    </div>
+    <form id="loginForm" novalidate>
+      <div class="form-group">
+        <label>Kullanıcı Adı</label>
+        <div class="input-wrapper">
+          <i class="fas fa-user"></i>
+          <input type="text" id="loginUsername" placeholder="Kullanıcı adınızı girin" autocomplete="username"/>
+        </div>
+        <span class="field-error" id="usernameError"></span>
+      </div>
+      <div class="form-group">
+        <label>Şifre</label>
+        <div class="input-wrapper">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="loginPassword" placeholder="Şifrenizi girin" autocomplete="current-password"/>
+          <button type="button" class="toggle-pw" id="togglePw"><i class="fas fa-eye"></i></button>
+        </div>
+        <span class="field-error" id="passwordError"></span>
+      </div>
+      <div class="login-hint">
+        <i class="fas fa-circle-info"></i> <strong>Demo Hesaplar:</strong><br>
+        Admin: <strong>admin</strong> / <strong>admin123</strong><br>
+        Kullanıcı: <strong>kullanici</strong> / <strong>user123</strong>
+      </div>
+      <button type="submit" class="btn-login" id="loginBtn">
+        <span class="btn-text">Giriş Yap</span>
+        <span class="btn-loader"><i class="fas fa-spinner fa-spin"></i></span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════ APP KABUĞU ══════════════ -->
+<div id="appShell" class="app-shell hidden">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div id="sidebarLogoWrap"><div class="brand-icon sm"><i class="fas fa-box-open"></i></div></div>
+      <span class="brand-name" id="sidebarAppName">ExpiryTrack</span>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav">
+      <a href="#" class="nav-item active" data-page="dashboard"><i class="fas fa-chart-line"></i><span>Gösterge Paneli</span></a>
+      <a href="#" class="nav-item" data-page="addProduct"><i class="fas fa-plus-circle"></i><span>Ürün Ekle</span></a>
+      <a href="#" class="nav-item" data-page="productList"><i class="fas fa-boxes-stacked"></i><span>Ürün Listesi</span></a>
+      <a href="#" class="nav-item" data-page="categories"><i class="fas fa-tags"></i><span>Kategoriler</span></a>
+      <!-- Admin only items injected by JS -->
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebarAvatarWrap"><i class="fas fa-user"></i></div>
+        <div class="user-meta">
+          <span class="user-name" id="sidebarUsername"></span>
+          <span class="user-role-tag" id="sidebarRoleTag"></span>
+        </div>
+      </div>
+      <button class="btn-logout" id="logoutBtn" title="Çıkış Yap"><i class="fas fa-right-from-bracket"></i></button>
+    </div>
+  </aside>
+
+  <!-- ANA İÇERİK -->
+  <div class="main-wrapper">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <span class="page-breadcrumb" id="pageTitle">Gösterge Paneli</span>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" id="themeToggle" title="Tema Değiştir"><i class="fas fa-moon" id="themeIcon"></i></button>
+        <div class="notif-btn" id="notifBtn">
+          <i class="fas fa-bell"></i>
+          <span class="notif-badge hidden" id="notifBadge">0</span>
+          <div class="notif-dropdown hidden" id="notifDropdown">
+            <div class="notif-dropdown-header">
+              <span>Bildirimler</span>
+              <div style="display:flex;gap:8px">
+                <button class="notif-action-btn" id="markAllReadBtn" title="Tümünü okundu say"><i class="fas fa-check-double"></i></button>
+                <button class="notif-action-btn" id="clearNotifsBtn" title="Bildirimleri temizle"><i class="fas fa-trash"></i></button>
+              </div>
+            </div>
+            <div class="notif-list" id="notifList"></div>
+            <div class="notif-empty hidden" id="notifEmpty"><i class="fas fa-bell-slash"></i><span>Bildirim yok</span></div>
+          </div>
+        </div>
+        <div class="topbar-user"><div class="user-avatar sm" id="topbarAvatarWrap"><i class="fas fa-user"></i></div><span id="topbarUsername"></span></div>
+      </div>
+    </header>
+
+    <main class="content-area">
+
+      <!-- ── GÖSTERGE PANELİ ── -->
+      <section class="page active" id="page-dashboard">
+        <div class="page-header"><div class="page-header-text"><h2>Genel Bakış</h2><p>Ürünlerinizin son kullanma durumunu anlık takip edin</p></div></div>
+        <div class="stats-grid cols-7" id="dashStatsGrid">
+          <div class="stat-card s-stores"><div class="stat-icon"><i class="fas fa-store"></i></div><div class="stat-info"><span class="stat-label" id="lStores">Toplam Mağaza</span><span class="stat-value" id="sStores">0</span></div></div>
+          <div class="stat-card s-cats"><div class="stat-icon"><i class="fas fa-tags"></i></div><div class="stat-info"><span class="stat-label" id="lCats">Kategoriler</span><span class="stat-value" id="sCats">0</span></div></div>
+          <div class="stat-card s-brands"><div class="stat-icon"><i class="fas fa-certificate"></i></div><div class="stat-info"><span class="stat-label" id="lBrands">Toplam Marka</span><span class="stat-value" id="sBrands">0</span></div></div>
+          <div class="stat-card s-total"><div class="stat-icon"><i class="fas fa-boxes-stacked"></i></div><div class="stat-info"><span class="stat-label" id="lTotal">Toplam Ürün</span><span class="stat-value" id="sTotal">0</span></div></div>
+          <div class="stat-card s-expired"><div class="stat-icon"><i class="fas fa-skull-crossbones"></i></div><div class="stat-info"><span class="stat-label" id="lExpired">Süresi Dolmuş</span><span class="stat-value" id="sExpired">0</span></div></div>
+          <div class="stat-card s-7"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-info"><span class="stat-label" id="lSoon7">Bu Hafta Dolacak</span><span class="stat-value" id="sSoon7">0</span></div></div>
+          <div class="stat-card s-30"><div class="stat-icon"><i class="fas fa-calendar-days"></i></div><div class="stat-info"><span class="stat-label" id="lSoon30">Bu Ay Dolacak</span><span class="stat-value" id="sSoon30">0</span></div></div>
+        </div>
+        <div class="alert-banner hidden" id="alertBanner"><i class="fas fa-triangle-exclamation"></i><span id="alertText"></span><button class="alert-action" data-page="productList">Tümünü Gör</button></div>
+        <div class="dash-two-col">
+          <!-- Sol: Durum Paneli -->
+          <div class="dash-left-col">
+            <div class="section-card">
+              <div class="section-card-header"><h3><i class="fas fa-list-ul"></i> Yakın Tarihli Ürünler</h3></div>
+              <div id="expiryPanel"></div>
+            </div>
+          </div>
+          <!-- Sağ: Kritik tablo -->
+          <div class="dash-right-col">
+            <div class="section-card">
+              <div class="section-card-header"><h3><i class="fas fa-fire-flame-curved"></i> Kritik Ürünler</h3><button class="btn-link" data-page="productList">Tümünü Gör</button></div>
+              <div class="product-table-wrap">
+                <table class="product-table">
+                  <thead><tr><th>Ürün</th><th>Mağaza</th><th>Kategori</th><th>Marka</th><th>Adet</th><th>Son Kullanma</th><th>Durum</th></tr></thead>
+                  <tbody id="criticalTableBody"></tbody>
+                </table>
+                <div class="empty-state hidden" id="criticalEmpty"><i class="fas fa-circle-check"></i><p>Tüm ürünler iyi durumda!</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ÜRÜN EKLE ── -->
+      <section class="page" id="page-addProduct">
+        <div class="page-header"><div class="page-header-text"><h2>Ürün Ekle</h2><p>Yeni ürünü sisteme kaydedin</p></div></div>
+        <div class="form-card">
+          <form id="addProductForm" novalidate>
+            <div class="form-grid">
+              <div class="form-group"><label>Ürün Adı <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-tag"></i><input type="text" id="pName" placeholder="örn. Çikolatalı Gofret"/></div><span class="field-error" id="pNameErr"></span></div>
+              <div class="form-group"><label>Mağaza <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-store"></i><select id="pStore"></select></div><span class="field-error" id="pStoreErr"></span></div>
+              <div class="form-group"><label>Kategori <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-layer-group"></i><select id="pCategory"></select></div><span class="field-error" id="pCatErr"></span></div>
+              <div class="form-group"><label>Marka <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-certificate"></i><select id="pBrand"></select></div><span class="field-error" id="pBrandErr"></span></div>
+              <div class="form-group"><label>Adet <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-hashtag"></i><input type="number" id="pQty" placeholder="örn. 24" min="1"/></div><span class="field-error" id="pQtyErr"></span></div>
+              <div class="form-group"><label>Son Kullanma Tarihi <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-calendar"></i><input type="date" id="pExpiry"/></div><span class="field-error" id="pExpiryErr"></span></div>
+              <div class="form-group"><label>Barkod <span class="optional">(isteğe bağlı)</span></label><div class="input-wrapper"><i class="fas fa-barcode"></i><input type="text" id="pBarcode" placeholder="örn. 8690123456789"/></div></div>
+              <div class="form-group" style="grid-column:1/-1"><label>Ürün Resmi <span class="optional">(isteğe bağlı)</span></label><div class="img-uploader" id="pImgUploader"></div></div>
+            </div>
+            <div class="form-actions">
+              <button type="reset" class="btn-secondary">Temizle</button>
+              <button type="submit" class="btn-primary" id="addProductBtn"><span class="btn-text"><i class="fas fa-plus"></i> Ürün Ekle</span><span class="btn-loader"><i class="fas fa-spinner fa-spin"></i></span></button>
+            </div>
+          </form>
+          <div class="success-overlay" id="addSuccessOverlay"><div class="success-circle"><i class="fas fa-check"></i></div><p>Ürün başarıyla eklendi!</p></div>
+        </div>
+      </section>
+
+      <!-- ── ÜRÜN LİSTESİ ── -->
+      <section class="page" id="page-productList">
+        <div class="page-header"><div class="page-header-text"><h2>Ürün Listesi</h2><p>Tüm ürünler — mağaza, kategori ve marka bilgisiyle</p></div></div>
+        <div class="filters-bar">
+          <div class="search-box"><i class="fas fa-search"></i><input type="text" id="searchInput" placeholder="Ürün, barkod, marka ara..."/></div>
+          <div class="filter-group">
+            <select id="filterStore"><option value="">Tüm Mağazalar</option></select>
+            <select id="filterCat"><option value="">Tüm Kategoriler</option></select>
+            <select id="filterBrand"><option value="">Tüm Markalar</option></select>
+            <select id="sortBy">
+              <option value="expiry-asc">Son Kullanma: Yakın</option>
+              <option value="expiry-desc">Son Kullanma: Uzak</option>
+              <option value="name-asc">Ad: A-Z</option>
+              <option value="name-desc">Ad: Z-A</option>
+            </select>
+          </div>
+        </div>
+        <div id="productListContainer"></div>
+        <div class="empty-state hidden" id="productListEmpty"><i class="fas fa-box-open"></i><p>Ürün bulunamadı.</p><button class="btn-primary" data-page="addProduct"><i class="fas fa-plus"></i> İlk Ürünü Ekle</button></div>
+      </section>
+
+      <!-- ── KATEGORİLER ── -->
+      <section class="page" id="page-categories">
+        <div class="page-header"><div class="page-header-text"><h2>Kategoriler</h2><p>Ürün kategorileri ve marka yönetimi</p></div></div>
+        <div class="cat-cards-grid" id="catCardsGrid"></div>
+      </section>
+
+      <!-- ── MAĞAZALAR ── -->
+      <section class="page" id="page-stores">
+        <div class="page-header">
+          <div class="page-header-text"><h2>Mağazalar</h2><p>Sistem genelindeki mağazaları yönetin</p></div>
+          <div class="page-header-actions"><button class="btn-primary" id="addStoreBtn"><i class="fas fa-plus"></i> Mağaza Ekle</button></div>
+        </div>
+        <div class="stores-grid" id="storesGrid"></div>
+        <div class="empty-state hidden" id="storesEmpty"><i class="fas fa-store"></i><p>Henüz mağaza eklenmemiş.</p></div>
+      </section>
+
+      <!-- ── MARKALAR ── -->
+      <section class="page" id="page-brands">
+        <div class="page-header">
+          <div class="page-header-text"><h2>Markalar</h2><p>Kategori bazlı marka yönetimi</p></div>
+          <div class="page-header-actions"><button class="btn-primary" id="addBrandBtn"><i class="fas fa-plus"></i> Marka Ekle</button></div>
+        </div>
+        <div class="filters-bar">
+          <div class="filter-group"><select id="brandFilterCat"><option value="">Tüm Kategoriler</option></select></div>
+        </div>
+        <div class="brands-grid" id="brandsGrid"></div>
+        <div class="empty-state hidden" id="brandsEmpty"><i class="fas fa-certificate"></i><p>Henüz marka eklenmemiş.</p></div>
+      </section>
+
+      <!-- ── KULLANICILAR ── -->
+      <section class="page" id="page-users">
+        <div class="page-header">
+          <div class="page-header-text"><h2>Kullanıcılar</h2><p>Sistem kullanıcılarını ve mağaza atamalarını yönetin</p></div>
+          <div class="page-header-actions"><button class="btn-primary" id="addUserBtn"><i class="fas fa-user-plus"></i> Kullanıcı Ekle</button></div>
+        </div>
+        <div class="section-card">
+          <div class="product-table-wrap">
+            <table class="product-table">
+              <thead><tr><th>Kullanıcı Adı</th><th>Rol</th><th>Atanan Mağaza</th><th>İşlemler</th></tr></thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+          <div class="empty-state hidden" id="usersEmpty"><i class="fas fa-users"></i><p>Henüz kullanıcı eklenmemiş.</p></div>
+        </div>
+      </section>
+
+      <!-- ── ÜRÜN NOTLARI ── -->
+      <section class="page" id="page-productNotes">
+        <div class="page-header">
+          <div class="page-header-text"><h2>Ürün Notları</h2><p>Ürünlere özel başlık, metin ve görsel içeren notlar</p></div>
+          <div class="page-header-actions"><button class="btn-primary" id="addNoteBtn"><i class="fas fa-plus"></i> Yeni Not Ekle</button></div>
+        </div>
+        <div id="productNotesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px"></div>
+        <div class="empty-state hidden" id="productNotesEmpty"><i class="fas fa-note-sticky"></i><p>Henüz not eklenmemiş.</p></div>
+      </section>
+
+      <!-- ── AYARLAR ── -->
+      <section class="page" id="page-settings">
+        <div class="page-header"><div class="page-header-text"><h2>Sistem Ayarları</h2><p>Uygulama genelindeki sistem ayarlarını yönetin</p></div></div>
+        <div class="admin-panel-badge"><i class="fas fa-shield-halved"></i> Yalnızca Admin Erişimi</div>
+        <div class="form-card" style="max-width:600px">
+          <div class="settings-section">
+            <h3><i class="fas fa-sliders"></i> Uygulama Ayarları</h3>
+            <form id="settingsAppForm" novalidate>
+              <div class="form-grid" style="grid-template-columns:1fr">
+                <div class="form-group"><label>Uygulama Adı</label><div class="input-wrapper"><i class="fas fa-signature"></i><input type="text" id="settingAppName" placeholder="ExpiryTrack"/></div></div>
+                <div class="form-group"><label>Alt Başlık</label><div class="input-wrapper"><i class="fas fa-pen-to-square"></i><input type="text" id="settingTagline" placeholder="Akıllı Son Kullanma Takip Sistemi"/></div></div>
+                <div class="form-group"><label>Uygulama Logosu <span class="optional">(isteğe bağlı)</span></label><div class="img-uploader" id="appLogoUploader"></div></div>
+              </div>
+              <div class="form-actions"><button type="submit" class="btn-primary"><i class="fas fa-save"></i> Kaydet</button></div>
+            </form>
+          </div>
+          <hr style="border:none;border-top:1px solid var(--border);margin:24px 0">
+          <div class="settings-section">
+            <h3><i class="fas fa-key"></i> Şifre Değiştir</h3>
+            <form id="settingsPassForm" novalidate>
+              <div class="form-grid" style="grid-template-columns:1fr">
+                <div class="form-group"><label>Yeni Şifre</label><div class="input-wrapper"><i class="fas fa-lock"></i><input type="password" id="settingNewPass" placeholder="Yeni şifre girin"/></div><span class="field-error" id="settingPassErr"></span></div>
+              </div>
+              <div class="form-actions"><button type="submit" class="btn-primary"><i class="fas fa-shield-halved"></i> Şifreyi Güncelle</button></div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- MAĞAZA MODAL -->
+<div class="modal-overlay" id="storeModal">
+  <div class="modal">
+    <div class="modal-header"><h3><i class="fas fa-store"></i> <span id="storeModalTitle">Mağaza Ekle</span></h3><button class="modal-close" data-close="storeModal"><i class="fas fa-times"></i></button></div>
+    <form id="storeForm" novalidate>
+      <input type="hidden" id="storeId"/>
+      <div class="form-grid" style="grid-template-columns:1fr">
+        <div class="form-group"><label>Mağaza Adı <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-store"></i><input type="text" id="storeName" placeholder="örn. Merkez Mağaza"/></div><span class="field-error" id="storeNameErr"></span></div>
+        <div class="form-group"><label>Açıklama <span class="optional">(isteğe bağlı)</span></label><div class="input-wrapper"><i class="fas fa-align-left"></i><textarea id="storeDesc" placeholder="Mağaza hakkında kısa açıklama"></textarea></div></div>
+        <div class="form-group"><label>Mağaza Logosu <span class="optional">(isteğe bağlı)</span></label><div class="img-uploader" id="storeLogoUploader"></div></div>
+      </div>
+      <div class="form-actions"><button type="button" class="btn-secondary" data-close="storeModal">İptal</button><button type="submit" class="btn-primary"><i class="fas fa-save"></i> Kaydet</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- MARKA MODAL -->
+<div class="modal-overlay" id="brandModal">
+  <div class="modal">
+    <div class="modal-header"><h3><i class="fas fa-certificate"></i> <span id="brandModalTitle">Marka Ekle</span></h3><button class="modal-close" data-close="brandModal"><i class="fas fa-times"></i></button></div>
+    <form id="brandForm" novalidate>
+      <input type="hidden" id="brandId"/>
+      <div class="form-grid" style="grid-template-columns:1fr">
+        <div class="form-group"><label>Marka Adı <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-certificate"></i><input type="text" id="brandName" placeholder="örn. Eti, Ülker, Nestle"/></div><span class="field-error" id="brandNameErr"></span></div>
+        <div class="form-group"><label>Kategori <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-tags"></i><select id="brandCat"></select></div><span class="field-error" id="brandCatErr"></span></div>
+        <div class="form-group"><label>Marka Logosu <span class="optional">(isteğe bağlı)</span></label><div class="img-uploader" id="brandLogoUploader"></div></div>
+      </div>
+      <div class="form-actions"><button type="button" class="btn-secondary" data-close="brandModal">İptal</button><button type="submit" class="btn-primary"><i class="fas fa-save"></i> Kaydet</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- KULLANICI MODAL -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal">
+    <div class="modal-header"><h3><i class="fas fa-user-pen"></i> <span id="userModalTitle">Kullanıcı Ekle</span></h3><button class="modal-close" data-close="userModal"><i class="fas fa-times"></i></button></div>
+    <form id="userForm" novalidate>
+      <input type="hidden" id="userId"/>
+      <div class="form-grid" style="grid-template-columns:1fr">
+        <div class="form-group"><label>Kullanıcı Adı <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-user"></i><input type="text" id="uUsername" placeholder="örn. kullanici1"/></div><span class="field-error" id="uUsernameErr"></span></div>
+        <div class="form-group"><label>Şifre <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-lock"></i><input type="password" id="uPassword" placeholder="Şifre girin"/></div><span class="field-error" id="uPasswordErr"></span></div>
+        <div class="form-group"><label>Rol <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-shield-halved"></i><select id="uRole"><option value="user">Kullanıcı</option><option value="admin">Admin</option></select></div></div>
+        <div class="form-group" id="uStoreGroup"><label>Atanan Mağaza <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-store"></i><select id="uStore"></select></div><span class="field-error" id="uStoreErr"></span></div>
+      </div>
+      <div class="form-actions"><button type="button" class="btn-secondary" data-close="userModal">İptal</button><button type="submit" class="btn-primary"><i class="fas fa-save"></i> Kaydet</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- ÜRÜN DÜZENLE MODAL -->
+<div class="modal-overlay" id="editProductModal">
+  <div class="modal">
+    <div class="modal-header"><h3><i class="fas fa-pen"></i> Ürünü Düzenle</h3><button class="modal-close" data-close="editProductModal"><i class="fas fa-times"></i></button></div>
+    <form id="editProductForm" novalidate>
+      <input type="hidden" id="editProdId"/>
+      <div class="form-grid">
+        <div class="form-group"><label>Ürün Adı <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-tag"></i><input type="text" id="editProdName"/></div></div>
+        <div class="form-group"><label>Mağaza <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-store"></i><select id="editProdStore"></select></div></div>
+        <div class="form-group"><label>Kategori <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-layer-group"></i><select id="editProdCat"></select></div></div>
+        <div class="form-group"><label>Marka <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-certificate"></i><select id="editProdBrand"></select></div></div>
+        <div class="form-group"><label>Adet <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-hashtag"></i><input type="number" id="editProdQty" min="1"/></div></div>
+        <div class="form-group"><label>Son Kullanma <span class="required">*</span></label><div class="input-wrapper"><i class="fas fa-calendar"></i><input type="date" id="editProdExpiry"/></div></div>
+        <div class="form-group"><label>Barkod</label><div class="input-wrapper"><i class="fas fa-barcode"></i><input type="text" id="editProdBarcode"/></div></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Ürün Resmi <span class="optional">(isteğe bağlı)</span></label><div class="img-uploader" id="editProdImgUploader"></div></div>
+      </div>
+      <div class="form-actions"><button type="button" class="btn-secondary" data-close="editProductModal">İptal</button><button type="submit" class="btn-primary"><i class="fas fa-save"></i> Kaydet</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- NOT DÜZENLE / EKLE MODAL -->
+<div class="modal-overlay" id="editNoteModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header"><h3><i class="fas fa-note-sticky"></i> <span id="editNoteModalTitle">Not Düzenle</span></h3><button class="modal-close" data-close="editNoteModal"><i class="fas fa-times"></i></button></div>
+    <input type="hidden" id="editNoteId"/>
+    <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:20px">
+      <div class="form-group">
+        <label>Ürün Seç <span class="required">*</span></label>
+        <div class="input-wrapper"><i class="fas fa-box"></i><select id="editNoteProdSelect"></select></div>
+        <span class="field-error" id="editNoteProdErr"></span>
+      </div>
+      <div class="form-group">
+        <label>Not Başlığı <span class="optional">(isteğe bağlı)</span></label>
+        <div class="input-wrapper"><i class="fas fa-heading"></i><input type="text" id="editNoteTitle" placeholder="örn. İade Uyarısı"/></div>
+      </div>
+      <div class="form-group">
+        <label>Not Metni</label>
+        <div class="input-wrapper"><i class="fas fa-pen-to-square"></i><textarea id="editNoteText" placeholder="Not metni..." style="min-height:100px"></textarea></div>
+      </div>
+      <div class="form-group">
+        <label>Not Görseli <span class="optional">(isteğe bağlı)</span></label>
+        <div class="img-uploader" id="editNoteImgUploader"></div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" data-close="editNoteModal">İptal</button>
+      <button type="button" class="btn-primary" id="saveNoteBtn"><i class="fas fa-save"></i> Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- SİLME ONAY MODAL -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal sm">
+    <div class="modal-header"><h3><i class="fas fa-trash"></i> <span id="deleteModalTitle">Sil</span></h3><button class="modal-close" data-close="deleteModal"><i class="fas fa-times"></i></button></div>
+    <div class="modal-body"><p id="deleteModalText"></p></div>
+    <div class="form-actions"><button class="btn-secondary" data-close="deleteModal">İptal</button><button class="btn-danger" id="deleteConfirmBtn"><i class="fas fa-trash"></i> Sil</button></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="lang.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
