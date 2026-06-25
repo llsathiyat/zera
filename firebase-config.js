@@ -42,8 +42,8 @@
         });
     });
 
-    // Firebase 4 saniyede cevap vermezse, eldeki yerel veriyle devam et
-    setTimeout(() => resolve(gotAny), 4000);
+    // Firebase 15 saniyede cevap vermezse, eldeki yerel veriyle devam et
+    setTimeout(() => resolve(gotAny), 15000);
   });
 
   // ── 2) localStorage.setItem'i ele geçir: her yazımda Firebase'e de gönder ──

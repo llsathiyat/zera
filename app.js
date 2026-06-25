@@ -203,6 +203,8 @@ function init() {
     const sess = sessionStorage.getItem('et_session');
     if (sess) { try { SESSION = JSON.parse(sess); showApp(); } catch { showLogin(); } }
     else showLogin();
+    const overlay = $('firebaseLoadingOverlay');
+    if (overlay) overlay.remove();
   };
   if (window.__firebaseReady) {
     window.__firebaseReady.then(start).catch(start);
