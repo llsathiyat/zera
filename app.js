@@ -196,7 +196,10 @@ $('themeToggle').addEventListener('click', () => {
 // INIT
 // ════════════════════════════════════════
 function init() {
+  let started = false;
   const start = () => {
+    if (started) return; // aynı anda 2 kez çalışmasın
+    started = true;
     seedDefaults();
     applyTheme(db.get(K.theme, 'light'));
     applySettings();
@@ -206,9 +209,18 @@ function init() {
     const overlay = $('firebaseLoadingOverlay');
     if (overlay) overlay.remove();
   };
-  if (window.__firebaseReady) {
-    window.__firebaseReady.then(start).catch(start);
-  } else {
+
+  // Ne olursa olsun 9 saniye sonra uygulamayı başlat (kesin garanti)
+  setTimeout(start, 9000);
+
+  try {
+    if (window.__firebaseReady && typeof window.__firebaseReady.then === 'function') {
+      window.__firebaseReady.then(start).catch(start);
+    } else {
+      start();
+    }
+  } catch (e) {
+    console.warn('[init] hata, doğrudan başlatılıyor:', e);
     start();
   }
 }
