@@ -34,6 +34,7 @@ const uid    = () => Date.now().toString(36) + Math.random().toString(36).slice(
 const isAdmin= () => SESSION?.role === 'admin';
 
 // ── IMAGE UPLOAD ──
+const IMGBB_API_KEY = 'c72ac2bc01eecd15e895836bd1efec90';
 // Global map: containerId → { getValue, setValue, reset }
 const uploaders = {};
 
@@ -81,10 +82,43 @@ function createUploader(containerId) {
     }
   }
 
+  function renderUploading() {
+    wrap.innerHTML =
+      `<div class="img-upload-area">
+         <i class="fas fa-spinner fa-spin"></i>
+         <span>Görsel yükleniyor...</span>
+       </div>`;
+  }
+
   function processFile(file) {
     if (!file.type.startsWith('image/')) { toast('Geçersiz format. Lütfen bir resim seçin.', 'error'); return; }
     if (file.size > 5242880) { toast('Dosya boyutu 5 MB sınırını aşıyor.', 'error'); return; }
-    compress(file, 800, file.size > 2097152 ? 0.70 : 0.82, result => { b64 = result; render(); });
+    renderUploading();
+    compress(file, 800, file.size > 2097152 ? 0.70 : 0.82, result => {
+      uploadToImgBB(result,
+        (url) => { b64 = url; render(); },
+        (errMsg) => { toast('Görsel yüklenemedi: ' + errMsg, 'error'); b64 = ''; render(); }
+      );
+    });
+  }
+
+  function uploadToImgBB(dataUrl, onSuccess, onError) {
+    const base64Only = dataUrl.split(',')[1];
+    const formData = new FormData();
+    formData.append('image', base64Only);
+    fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+      method: 'POST',
+      body: formData,
+    })
+      .then(res => res.json())
+      .then(json => {
+        if (json && json.success && json.data && json.data.url) {
+          onSuccess(json.data.url);
+        } else {
+          onError((json && json.error && json.error.message) || 'Bilinmeyen hata');
+        }
+      })
+      .catch(err => onError(err.message || 'Bağlantı hatası'));
   }
 
   function compress(file, maxPx, quality, cb) {
@@ -1226,6 +1260,73 @@ $('deleteConfirmBtn').addEventListener('click', () => {
 });
 
 // ════════════════════════════════════════
+// GÖÇ ARACI: Eski base64 görselleri ImgBB'ye taşı
+// (Tek seferlik — her görsel taşındıktan sonra bir daha denenmez)
+// ════════════════════════════════════════
+function migrateBase64ImagesToImgBB() {
+  const isBase64 = (s) => typeof s === 'string' && s.startsWith('data:image');
+
+  function uploadOne(dataUrl) {
+    return new Promise((resolve) => {
+      const base64Only = dataUrl.split(',')[1];
+      const formData = new FormData();
+      formData.append('image', base64Only);
+      fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(json => resolve(json && json.success ? json.data.url : null))
+        .catch(() => resolve(null));
+    });
+  }
+
+  async function migrateList(key) {
+    const items = db.get(key);
+    let changed = false;
+    for (const item of items) {
+      if (isBase64(item.image)) {
+        const url = await uploadOne(item.image);
+        if (url) { item.image = url; changed = true; }
+      }
+      if (isBase64(item.logo)) {
+        const url = await uploadOne(item.logo);
+        if (url) { item.logo = url; changed = true; }
+      }
+    }
+    if (changed) db.set(key, items);
+  }
+
+  async function migrateNotes() {
+    const notes = db.get(K.notes);
+    let changed = false;
+    for (const n of notes) {
+      if (isBase64(n.image)) {
+        const url = await uploadOne(n.image);
+        if (url) { n.image = url; changed = true; }
+      }
+    }
+    if (changed) db.set(K.notes, notes);
+  }
+
+  async function migrateSettings() {
+    const s = db.getObj(K.settings, {});
+    if (isBase64(s.logo)) {
+      const url = await uploadOne(s.logo);
+      if (url) { s.logo = url; db.set(K.settings, s); applySettings(); }
+    }
+  }
+
+  Promise.all([
+    migrateList(K.products),
+    migrateList(K.stores),
+    migrateList(K.brands),
+    migrateNotes(),
+    migrateSettings(),
+  ]).then(() => {
+    console.log('[Göç] Base64 görsel taşıma işlemi tamamlandı.');
+  });
+}
+
+// ════════════════════════════════════════
 // START
 // ════════════════════════════════════════
 init();
+setTimeout(migrateBase64ImagesToImgBB, 3000);
