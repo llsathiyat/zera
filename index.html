@@ -252,6 +252,30 @@
         <div class="empty-state hidden" id="productNotesEmpty"><i class="fas fa-note-sticky"></i><p>Henüz not eklenmemiş.</p></div>
       </section>
 
+      <!-- ── AKTİVİTE LOGLARI (Sadece İbrahim & Zehra) ── -->
+      <section class="page" id="page-activityLogs">
+        <div class="page-header">
+          <div class="page-header-text"><h2>Aktivite Logları</h2><p>Kullanıcı giriş/çıkış kayıtları ve son aktif durumları</p></div>
+          <div class="page-header-actions"><button class="btn-danger" id="clearLogsBtn"><i class="fas fa-trash"></i> Logları Temizle</button></div>
+        </div>
+
+        <div class="section-card" style="margin-bottom:20px">
+          <div class="section-card-header"><h3><i class="fas fa-circle-dot"></i> Kullanıcı Durumu</h3></div>
+          <div id="logsStatusGrid" class="logs-status-grid"></div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-card-header"><h3><i class="fas fa-list"></i> Giriş / Çıkış Kayıtları</h3></div>
+          <div class="product-table-wrap">
+            <table class="product-table">
+              <thead><tr><th>Kullanıcı</th><th>İşlem</th><th>Tarih · Saat</th><th>Tarayıcı</th><th>Cihaz</th></tr></thead>
+              <tbody id="logsTableBody"></tbody>
+            </table>
+            <div class="empty-state hidden" id="logsEmpty"><i class="fas fa-shield-halved"></i><p>Henüz bir kayıt yok.</p></div>
+          </div>
+        </div>
+      </section>
+
       <!-- ── AYARLAR ── -->
       <section class="page" id="page-settings">
         <div class="page-header"><div class="page-header-text"><h2>Sistem Ayarları</h2><p>Uygulama genelindeki sistem ayarlarını yönetin</p></div></div>

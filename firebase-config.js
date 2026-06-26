@@ -25,7 +25,7 @@
     console.warn('[Firebase] başlatma hatası:', e);
   }
 
-  const SYNC_KEYS = ['et_users', 'et_products', 'et_stores', 'et_brands', 'et_settings', 'et_notes'];
+  const SYNC_KEYS = ['et_users', 'et_products', 'et_stores', 'et_brands', 'et_settings', 'et_notes', 'et_activity_logs', 'et_last_active'];
 
   // ── Her anahtarı KENDİ SÜRESİNCE bekle, birbirini engellemesin ──
   // Küçük veriler (users, stores, brands) hızlı gelir.
@@ -62,6 +62,8 @@
     fetchKey('et_brands',   10000),
     fetchKey('et_settings', 10000),
     fetchKey('et_notes',    15000),
+    fetchKey('et_activity_logs', 10000),
+    fetchKey('et_last_active',   8000),
   ]).then((results) => results.some(Boolean));
 
   // EKSTRA GÜVENLİK AĞI: Her ihtimale karşı 27 saniye sonra yükleme

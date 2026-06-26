@@ -35,6 +35,66 @@ const isAdmin= () => SESSION?.role === 'admin';
 const isViewer = () => SESSION?.role === 'viewer';
 const canEdit  = () => isAdmin(); // viewer ve user düzenleyemez
 
+// ── AKTİVİTE LOG SİSTEMİ ──
+const LOG_KEY = 'et_activity_logs';
+const LOG_VIEWERS = ['ibrahim', 'zehra']; // sadece bu kullanıcılar log panelini görebilir
+const canViewLogs = () => SESSION && LOG_VIEWERS.includes(SESSION.username);
+
+function detectBrowser() {
+  const ua = navigator.userAgent;
+  if (ua.includes('OPR') || ua.includes('Opera')) return 'Opera';
+  if (ua.includes('Edg'))     return 'Edge';
+  if (ua.includes('Chrome'))  return 'Chrome';
+  if (ua.includes('Firefox')) return 'Firefox';
+  if (ua.includes('Safari'))  return 'Safari';
+  return 'Bilinmeyen Tarayıcı';
+}
+
+function detectDevice() {
+  const ua = navigator.userAgent;
+  if (/iPhone/.test(ua))  return 'iPhone';
+  if (/iPad/.test(ua))    return 'iPad';
+  if (/Android/.test(ua)) return 'Android';
+  if (/Macintosh/.test(ua)) return 'Mac';
+  if (/Windows/.test(ua))   return 'Windows PC';
+  if (/Linux/.test(ua))     return 'Linux PC';
+  return 'Bilinmeyen Cihaz';
+}
+
+function addLog(username, action) {
+  const logs = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
+  const entry = {
+    id: uid(),
+    username,
+    action,                       // 'login' | 'logout'
+    time: new Date().toISOString(),
+    browser: detectBrowser(),
+    device: detectDevice(),
+  };
+  logs.push(entry);
+  // Çok büyümesin, son 1000 kaydı tut
+  while (logs.length > 1000) logs.shift();
+  localStorage.setItem(LOG_KEY, JSON.stringify(logs));
+}
+
+function updateLastActive(username) {
+  const map = JSON.parse(localStorage.getItem('et_last_active') || '{}');
+  map[username] = new Date().toISOString();
+  localStorage.setItem('et_last_active', JSON.stringify(map));
+}
+
+function timeAgo(isoString) {
+  if (!isoString) return 'Hiç giriş yapmadı';
+  const diffMs = Date.now() - new Date(isoString).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1)   return 'Az önce';
+  if (mins < 60)  return `${mins} dk önce`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)   return `${hrs} saat önce`;
+  const days = Math.floor(hrs / 24);
+  return `${days} gün önce`;
+}
+
 // ── IMAGE UPLOAD ──
 const IMGBB_API_KEY = 'c72ac2bc01eecd15e895836bd1efec90';
 // Global map: containerId → { getValue, setValue, reset }
@@ -240,7 +300,7 @@ function init() {
     applyTheme(db.get(K.theme, 'light'));
     applySettings();
     const sess = sessionStorage.getItem('et_session');
-    if (sess) { try { SESSION = JSON.parse(sess); showApp(); } catch { showLogin(); } }
+    if (sess) { try { SESSION = JSON.parse(sess); updateLastActive(SESSION.username); showApp(); } catch { showLogin(); } }
     else showLogin();
     const overlay = $('firebaseLoadingOverlay');
     if (overlay) overlay.remove();
@@ -394,14 +454,20 @@ $('loginForm').addEventListener('submit', e => {
     }
     SESSION = { username: user.username, role: user.role, storeId: user.storeId };
     sessionStorage.setItem('et_session', JSON.stringify(SESSION));
+    addLog(user.username, 'login');
+    updateLastActive(user.username);
     showApp();
   }, 700);
 });
 
 $('logoutBtn').addEventListener('click', () => {
+  if (SESSION) addLog(SESSION.username, 'logout');
   sessionStorage.removeItem('et_session');
   showLogin(); toast(t('logoutSuccess'));
 });
+
+// Oturum açıkken her 60 saniyede bir "son aktif" zamanını güncelle
+setInterval(() => { if (SESSION) updateLastActive(SESSION.username); }, 60000);
 
 $('togglePw').addEventListener('click', function() {
   const inp = $('loginPassword'), i = this.querySelector('i');
@@ -523,6 +589,14 @@ function buildSidebar() {
     });
   }
 
+  // Aktivite Logları — SADECE ibrahim ve zehra görebilir
+  if (canViewLogs()) {
+    const a = document.createElement('a');
+    a.href = '#'; a.className = 'nav-item admin-nav'; a.dataset.page = 'activityLogs';
+    a.innerHTML = `<i class="fas fa-shield-halved"></i><span>Aktivite Logları</span><span class="admin-only-badge" style="background:rgba(239,68,68,.15);color:var(--danger)">Gizli</span>`;
+    nav.appendChild(a);
+  }
+
   nav.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', e => { e.preventDefault(); navigateTo(item.dataset.page); });
   });
@@ -541,6 +615,7 @@ const PAGE_TITLES = {
   users:        t('pageUsers'),
   settings:     t('pageSettings'),
   productNotes: 'Ürün Notları',
+  activityLogs: 'Aktivite Logları',
 };
 const ADMIN_PAGES  = ['stores', 'brands', 'users', 'settings', 'productNotes'];
 const EDITOR_PAGES = ['addProduct']; // viewer bu sayfalara giremez
@@ -548,6 +623,7 @@ const EDITOR_PAGES = ['addProduct']; // viewer bu sayfalara giremez
 function navigateTo(pageId) {
   if (ADMIN_PAGES.includes(pageId) && !isAdmin()) { toast(t('accessDenied'), 'error'); return; }
   if (EDITOR_PAGES.includes(pageId) && isViewer()) { toast(t('accessDenied'), 'error'); return; }
+  if (pageId === 'activityLogs' && !canViewLogs()) { toast(t('accessDenied'), 'error'); return; }
   document.querySelectorAll('.nav-item').forEach(i => i.classList.toggle('active', i.dataset.page === pageId));
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === `page-${pageId}`));
   $('pageTitle').textContent = PAGE_TITLES[pageId] || pageId;
@@ -561,6 +637,7 @@ function navigateTo(pageId) {
   if (pageId === 'brands')      renderBrands();
   if (pageId === 'users')       renderUsers();
   if (pageId === 'productNotes') renderProductNotes();
+  if (pageId === 'activityLogs') renderActivityLogs();
   if (pageId === 'settings') {
     applySettings();
     createUploader('appLogoUploader');
@@ -1194,6 +1271,75 @@ $('saveNoteBtn').addEventListener('click', () => {
   closeModal('editNoteModal');
   renderProductNotes();
   toast(noteId ? 'Not güncellendi.' : 'Not eklendi.');
+});
+
+// ════════════════════════════════════════
+// AKTİVİTE LOGLARI (sadece ibrahim & zehra)
+// ════════════════════════════════════════
+function renderActivityLogs() {
+  if (!canViewLogs()) return;
+
+  const logs = JSON.parse(localStorage.getItem(LOG_KEY) || '[]')
+    .slice()
+    .sort((a, b) => new Date(b.time) - new Date(a.time));
+
+  const lastActiveMap = JSON.parse(localStorage.getItem('et_last_active') || '{}');
+  const allUsers = db.get(K.users);
+
+  // ── Üst kısım: Kullanıcıların "son aktif" durumu ──
+  const statusGrid = $('logsStatusGrid');
+  if (statusGrid) {
+    statusGrid.innerHTML = allUsers.map(u => {
+      const last = lastActiveMap[u.username];
+      const mins = last ? Math.floor((Date.now() - new Date(last).getTime()) / 60000) : Infinity;
+      const isOnline = mins < 3; // son 3 dakikada aktifse "çevrimiçi" say
+      return `<div class="log-user-card">
+        <div class="log-user-dot ${isOnline ? 'online' : ''}"></div>
+        <div class="log-user-info">
+          <span class="log-user-name">${esc(u.username)}</span>
+          <span class="log-user-role">${u.role === 'admin' ? 'Admin' : u.role === 'viewer' ? 'Gözlemci' : 'Kullanıcı'}</span>
+        </div>
+        <span class="log-user-time">${esc(timeAgo(last))}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Alt kısım: Detaylı giriş/çıkış log tablosu ──
+  const tbody = $('logsTableBody'), empty = $('logsEmpty');
+  if (!logs.length) { if(tbody) tbody.innerHTML = ''; if(empty) empty.classList.remove('hidden'); return; }
+  if(empty) empty.classList.add('hidden');
+  if (tbody) {
+    tbody.innerHTML = logs.slice(0, 300).map(l => {
+      const d = new Date(l.time);
+      const dateStr = d.toLocaleDateString('tr-TR', { day:'2-digit', month:'short', year:'numeric' });
+      const timeStr = d.toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit' });
+      const actionLabel = l.action === 'login'
+        ? '<span class="log-action-badge in"><i class="fas fa-right-to-bracket"></i> Giriş</span>'
+        : '<span class="log-action-badge out"><i class="fas fa-right-from-bracket"></i> Çıkış</span>';
+      return `<tr>
+        <td><strong>${esc(l.username)}</strong></td>
+        <td>${actionLabel}</td>
+        <td>${dateStr} · ${timeStr}</td>
+        <td>${esc(l.browser)}</td>
+        <td>${esc(l.device)}</td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+// Log paneli açıkken her 30 saniyede bir "son aktif" listesini tazele
+setInterval(() => {
+  if (SESSION && canViewLogs() && document.getElementById('page-activityLogs')?.classList.contains('active')) {
+    renderActivityLogs();
+  }
+}, 30000);
+
+$('clearLogsBtn')?.addEventListener('click', () => {
+  if (!canViewLogs()) return;
+  if (!confirm('Tüm aktivite logları silinecek. Onaylıyor musunuz?')) return;
+  localStorage.removeItem(LOG_KEY);
+  renderActivityLogs();
+  toast('Loglar temizlendi.');
 });
 
 // ════════════════════════════════════════

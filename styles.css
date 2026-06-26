@@ -496,3 +496,16 @@ select{appearance:none}
   gap:8px; padding:32px 16px; color:var(--text3); font-size:13px;
 }
 .notif-empty i { font-size:24px; }
+
+/* ── AKTİVİTE LOGLARI ── */
+.logs-status-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;padding:16px}
+.log-user-card{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px}
+.log-user-dot{width:10px;height:10px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.log-user-dot.online{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2)}
+.log-user-info{display:flex;flex-direction:column;flex:1;min-width:0}
+.log-user-name{font-weight:700;font-size:13px;color:var(--text1)}
+.log-user-role{font-size:11px;color:var(--text3)}
+.log-user-time{font-size:11px;font-weight:600;color:var(--text2);white-space:nowrap}
+.log-action-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.log-action-badge.in{background:rgba(34,197,94,.12);color:#16a34a}
+.log-action-badge.out{background:rgba(239,68,68,.12);color:var(--danger)}
