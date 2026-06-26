@@ -56,7 +56,7 @@
 
   // ── AÇILIŞTA: tüm anahtarları paralel çek, hepsi bitince devam et ──
   window.__firebaseReady = Promise.all([
-    fetchKey('et_users',    10000),
+    fetchKey('et_users',    20000),
     fetchKey('et_products', 25000),   // en büyük veri, en uzun süre
     fetchKey('et_stores',   10000),
     fetchKey('et_brands',   10000),

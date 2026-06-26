@@ -304,6 +304,11 @@ function init() {
     else showLogin();
     const overlay = $('firebaseLoadingOverlay');
     if (overlay) overlay.remove();
+    // Veri hazır — giriş butonunu aktif et
+    const loginBtn = $('loginBtn');
+    if (loginBtn) loginBtn.disabled = false;
+    const waitMsg = $('loginWaitMsg');
+    if (waitMsg) waitMsg.style.display = 'none';
   };
 
   // Ne olursa olsun 28 saniye sonra uygulamayı başlat (kesin garanti)
