@@ -311,12 +311,14 @@ function init() {
     if (waitMsg) waitMsg.style.display = 'none';
   };
 
-  // Ne olursa olsun 28 saniye sonra uygulamayı başlat (kesin garanti)
-  setTimeout(start, 28000);
+  // Ne olursa olsun 9 saniye sonra uygulamayı başlat (kesin garanti)
+  setTimeout(start, 9000);
 
   try {
-    if (window.__firebaseReady && typeof window.__firebaseReady.then === 'function') {
-      window.__firebaseReady.then(start).catch(start);
+    // SADECE kullanıcı verisini bekle — büyük veriler arka planda gelir
+    const readyPromise = window.__usersReady || window.__firebaseReady;
+    if (readyPromise && typeof readyPromise.then === 'function') {
+      readyPromise.then(start).catch(start);
     } else {
       start();
     }
@@ -324,6 +326,31 @@ function init() {
     console.warn('[init] hata, doğrudan başlatılıyor:', e);
     start();
   }
+
+  // Arka planda büyük veriler gelince, açık olan sayfayı otomatik tazele
+  if (window.__backgroundReady && typeof window.__backgroundReady.then === 'function') {
+    window.__backgroundReady.then(() => {
+      console.log('[Firebase] Arka plan verileri (ürünler, mağazalar, vb.) güncellendi.');
+      refreshCurrentPage();
+    }).catch(() => {});
+  }
+}
+
+// Şu an ekranda açık olan sayfayı, türüne göre yeniden render eder.
+// Arka planda Firebase'den büyük veri gelince ekranı güncellemek için kullanılır.
+function refreshCurrentPage() {
+  if (!SESSION) return; // henüz giriş yapılmamışsa dokunma
+  const activePage = document.querySelector('.page.active');
+  if (!activePage) return;
+  const pageId = activePage.id.replace('page-', '');
+  if (pageId === 'dashboard')    renderDashboard();
+  if (pageId === 'productList')  renderProductList();
+  if (pageId === 'categories')   renderCategories();
+  if (pageId === 'stores')       renderStores();
+  if (pageId === 'brands')       renderBrands();
+  if (pageId === 'users')        renderUsers();
+  if (pageId === 'productNotes') renderProductNotes();
+  if (pageId === 'activityLogs') renderActivityLogs();
 }
 
 function seedDefaults() {
@@ -1529,4 +1556,7 @@ function migrateBase64ImagesToImgBB() {
 // START
 // ════════════════════════════════════════
 init();
-setTimeout(migrateBase64ImagesToImgBB, 3000);
+// NOT: migrateBase64ImagesToImgBB() artık otomatik çalışmıyor.
+// Göç işlemi tek seferlik tamamlandı (görseller zaten ImgBB linkleri).
+// Her açılışta tüm ürünleri taramak gereksiz yere zaman/CPU harcıyordu.
+// Gerekirse Console'dan elle çalıştırılabilir: migrateBase64ImagesToImgBB()
