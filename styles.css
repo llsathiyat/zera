@@ -564,3 +564,7 @@ select{appearance:none}
 .admin-warning-check-text{font-size:13.5px;font-weight:700;color:var(--text1)}
 .admin-warning-btn{width:100%;padding:13px}
 .admin-warning-btn[disabled]{background:#9ca3af;cursor:not-allowed;opacity:.6}
+
+/* ── BARKOD TARAYICI ── */
+#barcodeScannerReader video{width:100% !important;border-radius:var(--radius-sm)}
+#barcodeScannerReader{display:flex;align-items:center;justify-content:center}

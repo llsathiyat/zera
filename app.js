@@ -210,6 +210,7 @@ function createUploader(containerId) {
     getValue: () => b64,
     setValue: v  => { b64 = v || ''; render(); },
     reset:    () => { b64 = ''; render(); },
+    processExternalFile: f => processFile(f), // barkod taramadan gelen görsel için
   };
   uploaders[containerId] = api;
   return api;
@@ -878,6 +879,105 @@ function populateBrandSelect(selId, catId = '', selected = '') {
   const brands = db.get(K.brands).filter(b => !catId || b.categoryId === catId);
   sel.innerHTML = `<option value="">Marka seçin</option>` +
     brands.map(b => `<option value="${b.id}" ${b.id===selected?'selected':''}>${esc(b.name)}</option>`).join('');
+}
+
+// ════════════════════════════════════════
+// BARKOD TARAMA + ÜRÜN BİLGİSİ SORGULAMA
+// ════════════════════════════════════════
+let barcodeScannerInstance = null;
+
+function openBarcodeScanner() {
+  openModal('barcodeScannerModal');
+  $('barcodeScannerStatus').textContent = '';
+  $('barcodeScannerStatus').style.color = '';
+
+  if (typeof Html5Qrcode === 'undefined') {
+    $('barcodeScannerStatus').textContent = 'Tarayıcı kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edin.';
+    $('barcodeScannerStatus').style.color = 'var(--danger)';
+    return;
+  }
+
+  barcodeScannerInstance = new Html5Qrcode('barcodeScannerReader');
+  const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+
+  barcodeScannerInstance.start(
+    { facingMode: 'environment' },
+    config,
+    (decodedText) => {
+      // Barkod okundu — kamerayı durdur, formu doldur
+      stopBarcodeScanner();
+      closeModal('barcodeScannerModal');
+      $('pBarcode').value = decodedText;
+      lookupProductByBarcode(decodedText);
+    },
+    () => { /* okuma denemesi başarısız — sessizce devam et, sürekli tetiklenir */ }
+  ).catch((err) => {
+    $('barcodeScannerStatus').textContent = 'Kameraya erişilemedi. Tarayıcı izinlerini kontrol edin.';
+    $('barcodeScannerStatus').style.color = 'var(--danger)';
+    console.warn('[Barkod Tarayıcı] Kamera hatası:', err);
+  });
+}
+
+function stopBarcodeScanner() {
+  if (barcodeScannerInstance) {
+    barcodeScannerInstance.stop().catch(() => {});
+    barcodeScannerInstance.clear().catch(() => {});
+    barcodeScannerInstance = null;
+  }
+}
+
+$('scanBarcodeBtn')?.addEventListener('click', openBarcodeScanner);
+
+// Modal kapatılırsa (X veya dışına tıklama) kamerayı da durdur
+document.addEventListener('click', e => {
+  const closeBtn = e.target.closest('[data-close="barcodeScannerModal"]');
+  const overlay  = e.target.closest('#barcodeScannerModal');
+  if (closeBtn || (overlay && e.target === overlay)) stopBarcodeScanner();
+});
+
+function lookupProductByBarcode(barcode) {
+  const msg = $('barcodeScanMsg');
+  if (msg) { msg.textContent = 'Ürün bilgisi aranıyor...'; msg.style.color = 'var(--primary)'; }
+
+  fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === 1 && data.product) {
+        const p = data.product;
+        const name = p.product_name_tr || p.product_name || '';
+        const brand = p.brands || '';
+        const imageUrl = p.image_front_url || p.image_url || '';
+
+        if (name && !$('pName').value.trim()) {
+          $('pName').value = brand ? `${name} (${brand})` : name;
+        }
+
+        if (imageUrl) {
+          fetchAndSetProductImage(imageUrl);
+        }
+
+        if (msg) { msg.textContent = `✓ Ürün bulundu: ${name || 'isimsiz'}`; msg.style.color = '#16a34a'; }
+        toast('Ürün bilgisi otomatik dolduruldu, lütfen kontrol edin.');
+      } else {
+        if (msg) { msg.textContent = 'Bu barkod için ürün bilgisi bulunamadı, manuel girebilirsiniz.'; msg.style.color = 'var(--text3)'; }
+      }
+    })
+    .catch(() => {
+      if (msg) { msg.textContent = 'Ürün bilgisi sorgulanamadı (bağlantı hatası).'; msg.style.color = 'var(--danger)'; }
+    });
+}
+
+function fetchAndSetProductImage(imageUrl) {
+  fetch(imageUrl)
+    .then(res => res.blob())
+    .then(blob => {
+      const file = new File([blob], 'urun.jpg', { type: blob.type || 'image/jpeg' });
+      const uploader = uploaders['pImgUploader'];
+      if (uploader && typeof uploader.processExternalFile === 'function') {
+        uploader.processExternalFile(file);
+      }
+    })
+    .catch(() => { /* görsel alınamadıysa sessizce geç, isim/marka zaten dolduruldu */ });
 }
 
 $('addProductForm').addEventListener('submit', e => {
