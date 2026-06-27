@@ -159,7 +159,7 @@ const TR = {
   catViewBrands:      'Markaları Gör',
   catEmpty:           'Kategori bulunamadı.',
   FIXED_CATEGORIES: [
-    { id: 'abur-cubur',      name: 'Abur Cubur',       icon: 'fa-cookie-bite',    color: '#f59e0b' },
+    { id: 'abur-cubur',      name: 'Atıştırmalık',     icon: 'fa-cookie-bite',    color: '#f59e0b' },
     { id: 'acik-sarkuteri',  name: 'Açık Şarküteri',   icon: 'fa-cheese',         color: '#ef4444' },
     { id: 'kapali-sarkuteri',name: 'Kapalı Şarküteri', icon: 'fa-box',            color: '#8b5cf6' },
     { id: 'kasap',           name: 'Kasap',             icon: 'fa-drumstick-bite', color: '#dc2626' },
