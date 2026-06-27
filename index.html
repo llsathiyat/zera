@@ -180,23 +180,32 @@
 
       <!-- ── ÜRÜN LİSTESİ ── -->
       <section class="page" id="page-productList">
-        <div class="page-header"><div class="page-header-text"><h2>Ürün Listesi</h2><p>Tüm ürünler — mağaza, kategori ve marka bilgisiyle</p></div></div>
-        <div class="filters-bar">
-          <div class="search-box"><i class="fas fa-search"></i><input type="text" id="searchInput" placeholder="Ürün, barkod, marka ara..."/></div>
-          <div class="filter-group">
-            <select id="filterStore"><option value="">Tüm Mağazalar</option></select>
-            <select id="filterCat"><option value="">Tüm Kategoriler</option></select>
-            <select id="filterBrand"><option value="">Tüm Markalar</option></select>
-            <select id="sortBy">
-              <option value="expiry-asc">Son Kullanma: Yakın</option>
-              <option value="expiry-desc">Son Kullanma: Uzak</option>
-              <option value="name-asc">Ad: A-Z</option>
-              <option value="name-desc">Ad: Z-A</option>
-            </select>
-          </div>
+        <div class="page-header" id="productListHeader">
+          <div class="page-header-text"><h2>Ürün Listesi</h2><p id="productListSubtitle">Önce bir kategori seçin</p></div>
         </div>
-        <div id="productListContainer"></div>
-        <div class="empty-state hidden" id="productListEmpty"><i class="fas fa-box-open"></i><p>Ürün bulunamadı.</p><button class="btn-primary" data-page="addProduct"><i class="fas fa-plus"></i> İlk Ürünü Ekle</button></div>
+
+        <!-- KATEGORİ KARTLARI (varsayılan görünüm) -->
+        <div class="cat-cards-grid" id="productListCatGrid"></div>
+
+        <!-- SEÇİLEN KATEGORİNİN ÜRÜNLERİ (kategoriye tıklanınca açılır) -->
+        <div id="productListDetailView" class="hidden">
+          <button class="btn-secondary" id="backToCatGridBtn" style="margin-bottom:16px"><i class="fas fa-arrow-left"></i> Kategorilere Dön</button>
+          <div class="filters-bar">
+            <div class="search-box"><i class="fas fa-search"></i><input type="text" id="searchInput" placeholder="Ürün, barkod, marka ara..."/></div>
+            <div class="filter-group">
+              <select id="filterStore"><option value="">Tüm Mağazalar</option></select>
+              <select id="filterBrand"><option value="">Tüm Markalar</option></select>
+              <select id="sortBy">
+                <option value="expiry-asc">Son Kullanma: Yakın</option>
+                <option value="expiry-desc">Son Kullanma: Uzak</option>
+                <option value="name-asc">Ad: A-Z</option>
+                <option value="name-desc">Ad: Z-A</option>
+              </select>
+            </div>
+          </div>
+          <div id="productListContainer"></div>
+          <div class="empty-state hidden" id="productListEmpty"><i class="fas fa-box-open"></i><p>Ürün bulunamadı.</p><button class="btn-primary" data-page="addProduct"><i class="fas fa-plus"></i> İlk Ürünü Ekle</button></div>
+        </div>
       </section>
 
       <!-- ── KATEGORİLER ── -->

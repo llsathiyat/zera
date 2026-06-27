@@ -666,7 +666,7 @@ function navigateTo(pageId) {
 
   if (pageId === 'dashboard')   renderDashboard();
   if (pageId === 'addProduct')  prepareAddProductForm();
-  if (pageId === 'productList') renderProductList();
+  if (pageId === 'productList') { PF.catId = ''; PF.search = ''; PF.storeId = ''; PF.brandId = ''; renderProductList(); }
   if (pageId === 'categories')  renderCategories();
   if (pageId === 'stores')      renderStores();
   if (pageId === 'brands')      renderBrands();
@@ -899,12 +899,22 @@ $('addProductForm').addEventListener('submit', e => {
 let PF = { search:'', storeId:'', catId:'', brandId:'', sort:'expiry-asc' };
 
 function renderProductList() {
-  populateStoreFilter(); populateCatFilter(); populateBrandFilter();
+  // Kategori seçilmemişse: kart görünümünü göster
+  if (!PF.catId) {
+    showProductListCatGrid();
+    return;
+  }
 
-  let products = visibleProducts();
+  // Kategori seçilmişse: o kategorinin ürün tablosunu göster
+  $('productListCatGrid').classList.add('hidden');
+  $('productListDetailView').classList.remove('hidden');
+  $('productListSubtitle').textContent = `${getCatName(PF.catId)} kategorisindeki ürünler`;
+
+  populateStoreFilter(); populateBrandFilter();
+
+  let products = visibleProducts().filter(p => p.categoryId === PF.catId);
   if (PF.search) { const q = PF.search.toLowerCase(); products = products.filter(p => p.name.toLowerCase().includes(q) || (p.barcode||'').includes(q) || getBrandName(p.brandId).toLowerCase().includes(q)); }
   if (PF.storeId) products = products.filter(p => p.storeId  === PF.storeId);
-  if (PF.catId)   products = products.filter(p => p.categoryId === PF.catId);
   if (PF.brandId) products = products.filter(p => p.brandId  === PF.brandId);
   products.sort((a, b) => {
     if (PF.sort === 'expiry-asc')  return new Date(a.expiry) - new Date(b.expiry);
@@ -918,50 +928,69 @@ function renderProductList() {
   if (!products.length) { container.innerHTML = ''; empty.classList.remove('hidden'); return; }
   empty.classList.add('hidden');
 
-  const groups = {};
-  products.forEach(p => { if (!groups[p.categoryId]) groups[p.categoryId] = []; groups[p.categoryId].push(p); });
-
-  container.innerHTML = Object.entries(groups).map(([catId, items]) => `
-    <div style="margin-bottom:24px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-        <span style="font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">${esc(getCatName(catId))}</span>
-        <span style="background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">${items.length}</span>
-      </div>
-      <div class="section-card"><div class="product-table-wrap">
-        <table class="product-table">
-          <thead><tr><th></th><th>Ürün</th><th>Mağaza</th><th>Marka</th><th>Barkod</th><th>Adet</th><th>Son Kullanma</th><th>Durum</th><th>İşlemler</th></tr></thead>
-          <tbody>${items.map(p => {
-            const s = expiryStatus(p.expiry);
-            const noteId = `note-${p.id}`;
-            return `<tr class="${s.d<0?'row-expired':''}">
-              <td>
-                <div class="prod-thumb-wrap">
-                  ${p.image
-                    ? `<img class="prod-thumb" src="${esc(p.image)}" alt="">`
-                    : `<div class="prod-thumb prod-thumb-empty"><i class="fas fa-image"></i></div>`}
-                </div>
-              </td>
-              <td><strong>${esc(p.name)}</strong></td>
-              <td>${esc(getStoreName(p.storeId))}</td>
-              <td>${esc(getBrandName(p.brandId))}</td>
-              <td>${p.barcode ? esc(p.barcode) : '<span style="color:var(--text3)">—</span>'}</td>
-              <td>${p.quantity}</td>
-              <td>${fmtDate(p.expiry)}</td>
-              <td><span class="status-badge ${s.cls}"><i class="fas ${s.icon}"></i>${s.label}</span></td>
-              <td><div class="row-actions">
-                ${p.note ? `<button class="action-btn note-toggle" onclick="toggleProdNote('${noteId}')" title="Notu Göster"><i class="fas fa-note-sticky"></i></button>` : ''}
-                ${canEdit() ? `<button class="action-btn edit"   onclick="openEditProduct('${p.id}')" title="Düzenle"><i class="fas fa-pen"></i></button>` : ''}
-                ${canEdit() ? `<button class="action-btn delete" onclick="openDeleteItem('product','${p.id}','${esc(p.name)}')" title="Sil"><i class="fas fa-trash"></i></button>` : ''}
-              </div></td>
-            </tr>
-            ${p.note ? `<tr class="prod-note-row" id="${noteId}" style="display:none">
-              <td colspan="9"><div class="prod-note-body"><i class="fas fa-note-sticky"></i> ${esc(p.note)}${p.noteImage ? `<img class="note-inline-thumb" src="${esc(p.noteImage)}" alt="">` : ''}</div></td>
-            </tr>` : ''}`;
-          }).join('')}</tbody>
-        </table>
-      </div></div>
-    </div>`).join('');
+  container.innerHTML = `
+    <div class="section-card"><div class="product-table-wrap">
+      <table class="product-table">
+        <thead><tr><th></th><th>Ürün</th><th>Mağaza</th><th>Marka</th><th>Barkod</th><th>Adet</th><th>Son Kullanma</th><th>Durum</th><th>İşlemler</th></tr></thead>
+        <tbody>${products.map(p => {
+          const s = expiryStatus(p.expiry);
+          const noteId = `note-${p.id}`;
+          return `<tr class="${s.d<0?'row-expired':''}">
+            <td>
+              <div class="prod-thumb-wrap">
+                ${p.image
+                  ? `<img class="prod-thumb" src="${esc(p.image)}" alt="">`
+                  : `<div class="prod-thumb prod-thumb-empty"><i class="fas fa-image"></i></div>`}
+              </div>
+            </td>
+            <td><strong>${esc(p.name)}</strong></td>
+            <td>${esc(getStoreName(p.storeId))}</td>
+            <td>${esc(getBrandName(p.brandId))}</td>
+            <td>${p.barcode ? esc(p.barcode) : '<span style="color:var(--text3)">—</span>'}</td>
+            <td>${p.quantity}</td>
+            <td>${fmtDate(p.expiry)}</td>
+            <td><span class="status-badge ${s.cls}"><i class="fas ${s.icon}"></i>${s.label}</span></td>
+            <td><div class="row-actions">
+              ${p.note ? `<button class="action-btn note-toggle" onclick="toggleProdNote('${noteId}')" title="Notu Göster"><i class="fas fa-note-sticky"></i></button>` : ''}
+              ${canEdit() ? `<button class="action-btn edit"   onclick="openEditProduct('${p.id}')" title="Düzenle"><i class="fas fa-pen"></i></button>` : ''}
+              ${canEdit() ? `<button class="action-btn delete" onclick="openDeleteItem('product','${p.id}','${esc(p.name)}')" title="Sil"><i class="fas fa-trash"></i></button>` : ''}
+            </div></td>
+          </tr>
+          ${p.note ? `<tr class="prod-note-row" id="${noteId}" style="display:none">
+            <td colspan="9"><div class="prod-note-body"><i class="fas fa-note-sticky"></i> ${esc(p.note)}${p.noteImage ? `<img class="note-inline-thumb" src="${esc(p.noteImage)}" alt="">` : ''}</div></td>
+          </tr>` : ''}`;
+        }).join('')}</tbody>
+      </table>
+    </div></div>`;
 }
+
+function showProductListCatGrid() {
+  $('productListDetailView').classList.add('hidden');
+  $('productListCatGrid').classList.remove('hidden');
+  $('productListSubtitle').textContent = 'Önce bir kategori seçin';
+
+  const products = visibleProducts();
+  $('productListCatGrid').innerHTML = CATEGORIES.map((cat, i) => {
+    const pCount = products.filter(p => p.categoryId === cat.id).length;
+    return `<div class="cat-card" style="animation-delay:${i*0.06}s" onclick="selectProductListCategory('${cat.id}')">
+      <div class="cat-icon-wrap" style="background:${cat.color}22;color:${cat.color}"><i class="fas ${cat.icon}"></i></div>
+      <div class="cat-card-name">${esc(cat.name)}</div>
+      <div class="cat-card-meta">${t('catProducts', pCount)}</div>
+    </div>`;
+  }).join('');
+}
+
+window.selectProductListCategory = function(catId) {
+  PF.catId = catId;
+  renderProductList();
+};
+
+$('backToCatGridBtn')?.addEventListener('click', () => {
+  PF.catId = '';
+  PF.search = ''; PF.storeId = ''; PF.brandId = '';
+  const searchInput = $('searchInput'); if (searchInput) searchInput.value = '';
+  renderProductList();
+});
 
 function populateStoreFilter() {
   const sel = $('filterStore'); if (!sel) return;
