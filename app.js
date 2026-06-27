@@ -272,10 +272,10 @@ document.addEventListener('click', e => {
   const c = e.target.closest('[data-close]');
   if (c) closeModal(c.dataset.close);
   const ov = e.target.closest('.modal-overlay');
-  if (ov && e.target === ov) closeModal(ov.id);
+  if (ov && e.target === ov && ov.id !== 'adminWarningModal') closeModal(ov.id);
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => { if (m.id !== 'adminWarningModal') m.classList.remove('open'); });
 });
 
 // ── THEME ──
@@ -490,8 +490,31 @@ $('loginForm').addEventListener('submit', e => {
     sessionStorage.setItem('et_session', JSON.stringify(SESSION));
     addLog(user.username, 'login');
     updateLastActive(user.username);
-    showApp();
+    btn.classList.remove('loading');
+
+    if (user.role === 'admin') {
+      showAdminWarningModal();
+    } else {
+      showApp();
+    }
   }, 700);
+});
+
+function showAdminWarningModal() {
+  const checkbox  = $('adminWarningCheckbox');
+  const acceptBtn = $('adminWarningAcceptBtn');
+  checkbox.checked = false;
+  acceptBtn.disabled = true;
+  openModal('adminWarningModal');
+}
+
+$('adminWarningCheckbox')?.addEventListener('change', function() {
+  $('adminWarningAcceptBtn').disabled = !this.checked;
+});
+
+$('adminWarningAcceptBtn')?.addEventListener('click', () => {
+  closeModal('adminWarningModal');
+  showApp();
 });
 
 $('logoutBtn').addEventListener('click', () => {
