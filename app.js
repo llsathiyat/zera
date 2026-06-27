@@ -348,7 +348,6 @@ function refreshCurrentPage() {
   const pageId = activePage.id.replace('page-', '');
   if (pageId === 'dashboard')    renderDashboard();
   if (pageId === 'productList')  renderProductList();
-  if (pageId === 'categories')   renderCategories();
   if (pageId === 'stores')       renderStores();
   if (pageId === 'brands')       renderBrands();
   if (pageId === 'users')        renderUsers();
@@ -644,7 +643,6 @@ const PAGE_TITLES = {
   dashboard:    t('pageDashboard'),
   addProduct:   t('pageAddProduct'),
   productList:  t('pageProductList'),
-  categories:   t('pageCategories'),
   stores:       t('pageStores'),
   brands:       t('pageBrands'),
   users:        t('pageUsers'),
@@ -667,7 +665,6 @@ function navigateTo(pageId) {
   if (pageId === 'dashboard')   renderDashboard();
   if (pageId === 'addProduct')  prepareAddProductForm();
   if (pageId === 'productList') { PF.catId = ''; PF.search = ''; PF.storeId = ''; PF.brandId = ''; renderProductList(); }
-  if (pageId === 'categories')  renderCategories();
   if (pageId === 'stores')      renderStores();
   if (pageId === 'brands')      renderBrands();
   if (pageId === 'users')       renderUsers();
