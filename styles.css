@@ -78,13 +78,13 @@ ul{list-style:none}
 
 /* ── INPUT WRAPPER ── */
 .input-wrapper{position:relative;display:flex;align-items:center}
-.input-wrapper>i:first-child{position:absolute;left:14px;color:#9aa0b8;font-size:14px;pointer-events:none}
-.input-wrapper input,.input-wrapper select,.input-wrapper textarea{width:100%;padding:11px 14px 11px 40px;border:1.5px solid #e2e8f4;border-radius:var(--radius-sm);font-size:14px;color:#1a1d2e;background:#f8faff;transition:var(--transition);outline:none}
+.input-wrapper>i:first-child{position:absolute;left:14px;color:var(--text3);font-size:14px;pointer-events:none}
+.input-wrapper input,.input-wrapper select,.input-wrapper textarea{width:100%;padding:11px 14px 11px 40px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text);background:var(--surface2);transition:var(--transition);outline:none}
 .input-wrapper textarea{padding-top:10px;min-height:80px;resize:vertical}
 .input-wrapper input:focus,.input-wrapper select:focus,.input-wrapper textarea:focus{border-color:var(--text2);background:var(--surface);box-shadow:0 0 0 3px rgba(255,255,255,.06)}
-.input-wrapper input::placeholder,.input-wrapper textarea::placeholder{color:#c4c9d9}
-.toggle-pw{position:absolute;right:14px;color:#9aa0b8;font-size:13px;transition:color .2s}
-.toggle-pw:hover{color:var(--primary)}
+.input-wrapper input::placeholder,.input-wrapper textarea::placeholder{color:var(--text3)}
+.toggle-pw{position:absolute;right:14px;color:var(--text3);font-size:13px;transition:color .2s}
+.toggle-pw:hover{color:var(--text)}
 .field-error{display:block;font-size:12px;color:var(--danger);margin-top:5px;min-height:16px}
 
 /* ── APP SHELL ── */
