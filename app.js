@@ -885,8 +885,13 @@ function populateBrandSelect(selId, catId = '', selected = '') {
 // ════════════════════════════════════════
 let zxingReader = null;
 let zxingStream = null;
+let barcodeScanLocked = false;       // aynı barkodun tekrar tekrar okunmasını önler
+let barcodeScannerMode = 'full';     // 'full' = mevcut davranış (otomatik ürün arama) | 'barcodeOnly' = sadece alanı doldur
 
-function openBarcodeScanner() {
+// mode parametresi verilmezse eski davranış (mevcut "Tara" butonu) DEĞİŞMEDEN çalışır.
+function openBarcodeScanner(mode = 'full') {
+  barcodeScannerMode = mode;
+  barcodeScanLocked  = false;
   openModal('barcodeScannerModal');
   $('barcodeScannerStatus').textContent = 'Kamera başlatılıyor...';
   $('barcodeScannerStatus').style.color = '';
@@ -927,12 +932,16 @@ function openBarcodeScanner() {
     { video: videoConstraints },
     videoEl,
     (result, err) => {
-      if (result) {
+      if (result && !barcodeScanLocked) {
+        barcodeScanLocked = true; // aynı kare/barkod tekrar tekrar tetiklenmesin
         const decodedText = result.getText();
         stopBarcodeScanner();
         closeModal('barcodeScannerModal');
         $('pBarcode').value = decodedText;
-        lookupProductByBarcode(decodedText);
+        if (barcodeScannerMode === 'full') {
+          lookupProductByBarcode(decodedText); // MEVCUT DAVRANIŞ — değişmedi
+        }
+        // 'barcodeOnly' modunda: sadece alan dolduruldu, otomatik ürün araması YAPILMAZ.
       }
       // err sürekli "bulunamadı" hatası fırlatır taramaya devam ederken — bu normal, görmezden gel
     }
@@ -965,9 +974,14 @@ function stopBarcodeScanner() {
   }
   const videoEl = $('barcodeVideoEl');
   if (videoEl) videoEl.srcObject = null;
+  barcodeScanLocked = false;
 }
 
-$('scanBarcodeBtn')?.addEventListener('click', openBarcodeScanner);
+// Mevcut "Tara" butonu — DEĞİŞMEDİ, varsayılan 'full' modunda açılır (otomatik ürün arar)
+$('scanBarcodeBtn')?.addEventListener('click', () => openBarcodeScanner('full'));
+
+// Yeni "Barkod" butonu — sadece barkod alanını doldurur, otomatik ürün araması yapmaz
+$('scanBarcodeOnlyBtn')?.addEventListener('click', () => openBarcodeScanner('barcodeOnly'));
 
 // Modal kapatılırsa (X veya dışına tıklama) kamerayı da durdur
 document.addEventListener('click', e => {
