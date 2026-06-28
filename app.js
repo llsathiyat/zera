@@ -910,11 +910,21 @@ function openBarcodeScanner() {
   ];
   hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
   hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+  // PURE_BARCODE kapalı kalmalı (false) — kamera görüntüsünde barkodun etrafında
+  // boşluk/ürün ambalajı olur, "tam kare barkod" modu bunu okumayı zorlaştırır.
 
-  zxingReader = new ZXing.BrowserMultiFormatReader(hints);
+  zxingReader = new ZXing.BrowserMultiFormatReader(hints, 300); // 300ms: kareler arası tarama sıklığı artırıldı
+
+  // Yatay barkodlar (EAN/UPC) net okunsun diye yüksek çözünürlük ve
+  // otomatik odaklama tercih ediliyor — telefon kameraları bunu destekler.
+  const videoConstraints = {
+    facingMode: 'environment',
+    width:  { ideal: 1280 },
+    height: { ideal: 720 },
+  };
 
   zxingReader.decodeFromConstraints(
-    { video: { facingMode: 'environment' } },
+    { video: videoConstraints },
     videoEl,
     (result, err) => {
       if (result) {
@@ -929,6 +939,14 @@ function openBarcodeScanner() {
   ).then(() => {
     $('barcodeScannerStatus').textContent = '';
     zxingStream = videoEl.srcObject;
+    // Kamera odak modunu "continuous" yapmaya çalış (destekleniyorsa) — bulanıklığı azaltır
+    try {
+      const track = zxingStream.getVideoTracks()[0];
+      const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+      if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
+        track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+      }
+    } catch (e) { /* desteklenmiyorsa sessizce geç */ }
   }).catch((err) => {
     $('barcodeScannerStatus').textContent = 'Kameraya erişilemedi. Tarayıcı izinlerini kontrol edin.';
     $('barcodeScannerStatus').style.color = 'var(--danger)';
