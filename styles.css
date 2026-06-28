@@ -573,26 +573,19 @@ select{appearance:none}
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:22px;z-index:99999;
 }
-.zera-loading-ring{position:relative;width:64px;height:64px}
-.zera-loading-ring svg{width:64px;height:64px;transform:rotate(-90deg)}
-.zera-ring-track{fill:none;stroke:var(--border);stroke-width:4}
-.zera-ring-progress{
-  fill:none;stroke:var(--danger);stroke-width:4;stroke-linecap:round;
-  stroke-dasharray:169.6;stroke-dashoffset:169.6;
-  animation:zeraRingSweep 1.4s cubic-bezier(.65,0,.35,1) infinite;
+.zera-dots-ring{position:relative;width:56px;height:56px}
+.zera-dot{
+  position:absolute;top:50%;left:50%;width:7px;height:7px;
+  border-radius:50%;background:#dc2626;
+  transform:rotate(calc(var(--i) * 45deg)) translateX(24px);
+  margin:-3.5px;
+  animation:zeraDotPulse 1.2s linear infinite;
+  animation-delay:calc(var(--i) * 0.15s);
+  opacity:.25;
 }
-.zera-loading-z{
-  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  font-size:22px;font-weight:800;color:var(--text);
-  animation:zeraZPulse 1.4s ease-in-out infinite;
-}
-@keyframes zeraRingSweep{
-  0%{stroke-dashoffset:169.6;transform:rotate(0deg)}
-  50%{stroke-dashoffset:42.4}
-  100%{stroke-dashoffset:169.6;transform:rotate(360deg)}
-}
-@keyframes zeraZPulse{
-  0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(.92)}
-  50%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+@keyframes zeraDotPulse{
+  0%{opacity:1;background:#dc2626}
+  35%{opacity:.25;background:#3a3a40}
+  100%{opacity:.25;background:#3a3a40}
 }
 .zera-loading-text{font-size:13px;color:var(--text3);letter-spacing:.3px}

@@ -12,12 +12,15 @@
 
 <!-- ══════════════ YÜKLENİYOR ══════════════ -->
 <div id="firebaseLoadingOverlay" class="zera-loading-overlay" style="position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;background:#0a0a0c">
-  <div class="zera-loading-ring" style="position:relative;width:64px;height:64px">
-    <svg viewBox="0 0 64 64" width="64" height="64" style="width:64px;height:64px;transform:rotate(-90deg)">
-      <circle class="zera-ring-track" cx="32" cy="32" r="27" fill="none" stroke="#2a2a2f" stroke-width="4"/>
-      <circle class="zera-ring-progress" cx="32" cy="32" r="27" fill="none" stroke="#dc2626" stroke-width="4" stroke-linecap="round"/>
-    </svg>
-    <span class="zera-loading-z" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:22px;font-weight:800;color:#f5f5f7">Z</span>
+  <div class="zera-dots-ring" style="position:relative;width:56px;height:56px">
+    <span class="zera-dot" style="--i:0"></span>
+    <span class="zera-dot" style="--i:1"></span>
+    <span class="zera-dot" style="--i:2"></span>
+    <span class="zera-dot" style="--i:3"></span>
+    <span class="zera-dot" style="--i:4"></span>
+    <span class="zera-dot" style="--i:5"></span>
+    <span class="zera-dot" style="--i:6"></span>
+    <span class="zera-dot" style="--i:7"></span>
   </div>
   <span class="zera-loading-text" style="font-size:13px;color:#6b6b76;letter-spacing:.3px">Bağlanılıyor...</span>
 </div>
