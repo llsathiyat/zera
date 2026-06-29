@@ -133,7 +133,8 @@ ul{list-style:none}
 .notif-btn:hover{background:var(--warning-light);color:var(--warning)}
 .notif-badge{position:absolute;top:4px;right:4px;background:var(--danger);color:white;font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center}
 .notif-badge.hidden{display:none}
-.topbar-user{display:flex;align-items:center;gap:8px;color:var(--text);font-weight:600;font-size:13px}
+.topbar-user{display:flex;align-items:center;gap:8px;color:var(--text);font-weight:600;font-size:13px;padding:6px 10px;border-radius:var(--radius-sm);transition:var(--transition)}
+.topbar-user:hover{background:var(--surface2)}
 
 /* ── CONTENT ── */
 .content-area{flex:1;padding:28px 28px 40px;width:100%}
@@ -615,3 +616,25 @@ select{appearance:none}
   .dash-announce-text{white-space:normal;font-size:12px}
   .dash-announce{max-width:100%}
 }
+
+/* ── PROFİL MODALI: TEMA SWITCH ── */
+.theme-switch{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}
+.theme-switch input{opacity:0;width:0;height:0;position:absolute}
+.theme-switch-slider{
+  position:absolute;cursor:pointer;inset:0;
+  background:var(--border);border-radius:26px;transition:var(--transition);
+}
+.theme-switch-slider::before{
+  content:'';position:absolute;height:20px;width:20px;left:3px;bottom:3px;
+  background:var(--text);border-radius:50%;transition:var(--transition);
+}
+.theme-switch input:checked + .theme-switch-slider{background:var(--text2)}
+.theme-switch input:checked + .theme-switch-slider::before{
+  transform:translateX(20px);background:var(--bg);
+}
+
+/* ── PROFİL FOTOĞRAFI YÜKLEME ALANI ── */
+.profile-photo-uploader{width:96px;height:96px;border-radius:50%;overflow:hidden}
+.profile-photo-uploader .img-upload-area{border-radius:50%;width:96px;height:96px}
+.profile-photo-uploader .img-preview-wrap{border-radius:50%;width:96px;height:96px}
+.profile-photo-uploader .img-preview-wrap img{border-radius:50%;object-fit:cover}

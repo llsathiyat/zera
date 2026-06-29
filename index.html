@@ -116,7 +116,6 @@
         <span class="page-breadcrumb" id="pageTitle">Gösterge Paneli</span>
       </div>
       <div class="topbar-right">
-        <button class="icon-btn" id="themeToggle" title="Tema Değiştir"><i class="fas fa-moon" id="themeIcon"></i></button>
         <div class="notif-btn" id="notifBtn">
           <i class="fas fa-bell"></i>
           <span class="notif-badge hidden" id="notifBadge">0</span>
@@ -132,7 +131,7 @@
             <div class="notif-empty hidden" id="notifEmpty"><i class="fas fa-bell-slash"></i><span>Bildirim yok</span></div>
           </div>
         </div>
-        <div class="topbar-user"><div class="user-avatar sm" id="topbarAvatarWrap"><i class="fas fa-user"></i></div><span id="topbarUsername"></span></div>
+        <div class="topbar-user" id="topbarUserBtn" style="cursor:pointer"><div class="user-avatar sm" id="topbarAvatarWrap"><i class="fas fa-user"></i></div><span id="topbarUsername"></span></div>
       </div>
     </header>
 
@@ -452,7 +451,6 @@
   </div>
 </div>
 
-<!-- ADMIN YETKİLİ BİLGİLENDİRME MODAL -->
 <!-- BARKOD TARAYICI MODAL -->
 <div class="modal-overlay" id="barcodeScannerModal">
   <div class="modal" style="max-width:480px">
@@ -463,6 +461,65 @@
     </div>
     <p style="text-align:center;font-size:12px;color:var(--text3);margin-top:12px">Barkodu kutunun içine, yatay şekilde tutun.</p>
     <div id="barcodeScannerStatus" style="text-align:center;font-size:13px;font-weight:600;margin-top:8px;min-height:20px"></div>
+  </div>
+</div>
+
+<!-- PROFİL MODAL -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header"><h3><i class="fas fa-user-circle"></i> Profilim</h3><button class="modal-close" data-close="profileModal"><i class="fas fa-times"></i></button></div>
+
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:24px">
+      <div class="img-uploader profile-photo-uploader" id="profilePhotoUploader"></div>
+      <span style="font-size:12px;color:var(--text3)">Profil fotoğrafını değiştirmek için tıklayın</span>
+    </div>
+
+    <form id="profileUsernameForm" style="margin-bottom:20px">
+      <div class="form-group">
+        <label>Kullanıcı Adı</label>
+        <div class="input-wrapper"><i class="fas fa-user"></i><input type="text" id="profileUsername" placeholder="Kullanıcı adı"/></div>
+        <span class="field-error" id="profileUsernameErr"></span>
+      </div>
+      <div class="form-actions" style="margin-top:10px">
+        <button type="submit" class="btn-primary" style="width:100%"><i class="fas fa-save"></i> Kullanıcı Adını Güncelle</button>
+      </div>
+    </form>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
+
+    <form id="profilePasswordForm" style="margin-bottom:20px">
+      <div class="form-group">
+        <label>Mevcut Şifre</label>
+        <div class="input-wrapper"><i class="fas fa-lock"></i><input type="password" id="profileCurrentPass" placeholder="Mevcut şifrenizi girin"/></div>
+        <span class="field-error" id="profileCurrentPassErr"></span>
+      </div>
+      <div class="form-group">
+        <label>Yeni Şifre</label>
+        <div class="input-wrapper"><i class="fas fa-lock"></i><input type="password" id="profileNewPass" placeholder="Yeni şifre"/></div>
+        <span class="field-error" id="profileNewPassErr"></span>
+      </div>
+      <div class="form-group">
+        <label>Yeni Şifre (Tekrar)</label>
+        <div class="input-wrapper"><i class="fas fa-lock"></i><input type="password" id="profileNewPassConfirm" placeholder="Yeni şifreyi tekrar girin"/></div>
+        <span class="field-error" id="profileNewPassConfirmErr"></span>
+      </div>
+      <div class="form-actions" style="margin-top:10px">
+        <button type="submit" class="btn-primary" style="width:100%"><i class="fas fa-key"></i> Şifreyi Güncelle</button>
+      </div>
+    </form>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
+
+    <div class="form-group">
+      <label>Görünüm</label>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px">
+        <span style="font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px"><i class="fas fa-moon" id="profileThemeIcon"></i> <span id="profileThemeLabel">Koyu Tema</span></span>
+        <label class="theme-switch">
+          <input type="checkbox" id="profileThemeSwitch">
+          <span class="theme-switch-slider"></span>
+        </label>
+      </div>
+    </div>
   </div>
 </div>
 

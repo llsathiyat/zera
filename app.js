@@ -283,12 +283,15 @@ document.addEventListener('keydown', e => {
 // ── THEME ──
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  $('themeIcon').className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
   db.set(K.theme, theme);
+  // Profil modalındaki tema anahtarı ve etiketi de güncel kalsın
+  const switchEl = $('profileThemeSwitch');
+  const iconEl   = $('profileThemeIcon');
+  const labelEl  = $('profileThemeLabel');
+  if (switchEl) switchEl.checked = (theme === 'dark');
+  if (iconEl)   iconEl.className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+  if (labelEl)  labelEl.textContent = theme === 'light' ? 'Açık Tema' : 'Koyu Tema';
 }
-$('themeToggle').addEventListener('click', () => {
-  applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
-});
 
 // ════════════════════════════════════════
 // INIT
@@ -541,6 +544,19 @@ $('togglePw').addEventListener('click', function() {
 function updateTopbar() {
   $('topbarUsername').textContent = SESSION.username;
   updateNotifBadge();
+  renderTopbarAvatar();
+}
+
+// Kullanıcının profil fotoğrafını (varsa) topbar'da gösterir, yoksa varsayılan ikon kalır.
+function renderTopbarAvatar() {
+  const user = db.get(K.users).find(u => u.username === SESSION.username);
+  const wrap = $('topbarAvatarWrap');
+  if (!wrap) return;
+  if (user && user.photo) {
+    wrap.innerHTML = `<img src="${esc(user.photo)}" alt="profil" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  } else {
+    wrap.innerHTML = `<i class="fas fa-user"></i>`;
+  }
 }
 
 function updateNotifBadge() {
@@ -1965,3 +1981,111 @@ setTimeout(() => {
   el.addEventListener('mouseenter', pause);
   el.addEventListener('mouseleave', resume);
 })();
+
+// ════════════════════════════════════════
+// PROFİL MODALI
+// (Topbar'daki ayrı Tema butonu kaldırıldı, profil fotoğrafı,
+// kullanıcı adı, şifre ve tema seçimi artık burada tek bir yerde)
+// ════════════════════════════════════════
+$('topbarUserBtn')?.addEventListener('click', openProfileModal);
+
+function openProfileModal() {
+  if (!SESSION) return;
+  const user = db.get(K.users).find(u => u.username === SESSION.username);
+
+  clrErr('profileUsernameErr', 'profileCurrentPassErr', 'profileNewPassErr', 'profileNewPassConfirmErr');
+  $('profileUsername').value      = SESSION.username;
+  $('profileCurrentPass').value   = '';
+  $('profileNewPass').value       = '';
+  $('profileNewPassConfirm').value= '';
+
+  createUploader('profilePhotoUploader');
+  uploaders['profilePhotoUploader']?.setValue(user?.photo || '');
+
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+  $('profileThemeSwitch').checked      = (currentTheme === 'dark');
+  $('profileThemeIcon').className      = currentTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+  $('profileThemeLabel').textContent   = currentTheme === 'light' ? 'Açık Tema' : 'Koyu Tema';
+
+  openModal('profileModal');
+}
+
+// Fotoğraf, seçildiği an otomatik kaydedilir (kullanıcı ekstra "kaydet" butonuna basmasın,
+// görseli seçince anında profile yansır ve kalıcı olur).
+function saveProfilePhoto() {
+  if (!SESSION) return;
+  const newPhoto = uploaders['profilePhotoUploader']?.getValue() || '';
+  const users = db.get(K.users);
+  const idx   = users.findIndex(u => u.username === SESSION.username);
+  if (idx === -1) return;
+  users[idx].photo = newPhoto;
+  db.set(K.users, users);
+  renderTopbarAvatar();
+}
+// img-uploader bileşeni, görsel her değiştiğinde 'change' benzeri bir geri çağırım sunmuyor;
+// bu yüzden değişikliği yakalamak için uploader konteynerine tıklama sonrası kısa bir
+// gecikmeyle kontrol ediyoruz (mevcut createUploader mimarisine dokunmadan).
+document.addEventListener('click', (e) => {
+  if (e.target.closest('#profilePhotoUploader')) {
+    setTimeout(saveProfilePhoto, 600);
+  }
+});
+
+$('profileUsernameForm')?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  clrErr('profileUsernameErr');
+  const newUsername = $('profileUsername').value.trim();
+
+  if (!newUsername) { setErr('profileUsernameErr', 'Kullanıcı adı boş olamaz.'); return; }
+  if (newUsername.length < 3) { setErr('profileUsernameErr', 'Kullanıcı adı en az 3 karakter olmalı.'); return; }
+
+  const users = db.get(K.users);
+  const isTaken = users.some(u => u.username.toLowerCase() === newUsername.toLowerCase() && u.username !== SESSION.username);
+  if (isTaken) { setErr('profileUsernameErr', 'Bu kullanıcı adı zaten kullanılıyor.'); return; }
+
+  const idx = users.findIndex(u => u.username === SESSION.username);
+  if (idx === -1) return;
+
+  const oldUsername = users[idx].username;
+  users[idx].username = newUsername;
+  db.set(K.users, users);
+
+  SESSION.username = newUsername;
+  sessionStorage.setItem('et_session', JSON.stringify(SESSION));
+  addLog(newUsername, 'update', `Kullanıcı adını "${oldUsername}" iken "${newUsername}" olarak değiştirdi`);
+
+  updateTopbar();
+  toast('Kullanıcı adı güncellendi.');
+});
+
+$('profilePasswordForm')?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  clrErr('profileCurrentPassErr', 'profileNewPassErr', 'profileNewPassConfirmErr');
+
+  const currentPass = $('profileCurrentPass').value;
+  const newPass      = $('profileNewPass').value;
+  const confirmPass  = $('profileNewPassConfirm').value;
+
+  const users = db.get(K.users);
+  const idx   = users.findIndex(u => u.username === SESSION.username);
+  if (idx === -1) return;
+
+  if (!currentPass) { setErr('profileCurrentPassErr', 'Mevcut şifrenizi girin.'); return; }
+  if (users[idx].password !== currentPass) { setErr('profileCurrentPassErr', 'Mevcut şifre hatalı.'); return; }
+  if (!newPass || newPass.length < 4) { setErr('profileNewPassErr', 'Yeni şifre en az 4 karakter olmalı.'); return; }
+  if (newPass !== confirmPass) { setErr('profileNewPassConfirmErr', 'Şifreler birbiriyle eşleşmiyor.'); return; }
+  if (newPass === currentPass) { setErr('profileNewPassErr', 'Yeni şifre, mevcut şifreyle aynı olamaz.'); return; }
+
+  users[idx].password = newPass;
+  db.set(K.users, users);
+  addLog(SESSION.username, 'update', 'Kendi şifresini güncelledi');
+
+  $('profileCurrentPass').value = '';
+  $('profileNewPass').value = '';
+  $('profileNewPassConfirm').value = '';
+  toast('Şifre başarıyla güncellendi.');
+});
+
+$('profileThemeSwitch')?.addEventListener('change', function() {
+  applyTheme(this.checked ? 'dark' : 'light');
+});
